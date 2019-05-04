@@ -16,6 +16,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 std::queue<Person> man_queue;
 std::queue<Person> woman_queue;
 Fittingroom fitting_room;
+char all_people_sent; // global flag to indicate when there are no more people being produced
 struct timeval t_global_start;
 
 int main(int argc, char** argv)
@@ -33,6 +34,7 @@ int main(int argc, char** argv)
 
 	// don't need a lock for this since no threads have been created yet
 	fitting_room.set_num_stalls(num_stalls);
+	all_people_sent = 0;
 
 	pthread_t tid[3];
 
