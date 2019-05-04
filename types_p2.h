@@ -9,9 +9,13 @@
 #include <vector>
 #include <unistd.h>
 
+#define MALE   0
+#define FEMALE 1
+
 #define EMPTY        0
-#define WOMENPRESENT 1
-#define MENPRESENT   2
+#define WOMANPRESENT 1
+#define MANPRESENT   2
+#define FULL         3
 
 
 class Person
@@ -52,6 +56,7 @@ public:
 // You may need to add more class member variables and functions
 class Fittingroom {
 	int status;
+	int num_stalls;
 
 
 	// You need to define the data structure to
@@ -66,20 +71,20 @@ public:
 
 	}
 
+	void set_num_stalls(int n);
+
 	// You need to use this function to print the Fittingroom's status
 	void print_status(void);
+	int get_status(void);
 
 
 	// Call by reference
 	// This is just an example. You can implement any function you need
-	void add_person(Person& p);
+	void add_person(Person &p);
 
-
-
-
-
-
-
+	// Remove everyone who's ready to leave
+	// returns 1 if anyone was removed and 0 otherwise
+	int remove_ready(void);
 };
 
 
