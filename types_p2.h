@@ -55,21 +55,21 @@ public:
 // Class for the fittingroom
 // You may need to add more class member variables and functions
 class Fittingroom {
+
+private:
 	int status;
 	int num_stalls;
 
-
-	// You need to define the data structure to
-    // save the information of people using the fittingroom
-	// You can probebly use Standard Template Library (STL) vector
-
+	// std::vector was giving me some trouble so back to array it is then
+	Person *stalls; // the actual people and their information
+	char *occupied; // keeps track of whether or not each stall is occupied
+	int occupied_count; // number of stalls occupied
+	void add_to_array(Person &p);
+	void remove_from_array(int pos);
 
 public:
-	Fittingroom(){
-		status = EMPTY;
-
-
-	}
+	Fittingroom();
+	~Fittingroom();
 
 	void set_num_stalls(int n);
 
@@ -86,14 +86,5 @@ public:
 	// returns 1 if anyone was removed and 0 otherwise
 	int remove_ready(void);
 };
-
-
-
-
-
-
-
-
-
 
 #endif
