@@ -1,17 +1,17 @@
 EXEC=p2_exec
 CC=g++
-CFLAGS= -std=c++98 -I.
+CFLAGS= -std=c++98 -g -I.
 
 #----------------------------------------------
 # complete this part
 %.o: %.cpp	
-	@$(CC) -c $< $(CFLAGS)
+	$(CC) -c $< $(CFLAGS)
 #----------------------------------------------
 
 #----------------------------------------------
 # complete this part
 ${EXEC}: main.o types_p2.o p2_threads.o utils.o
-	@$(CC) -o ${EXEC} main.o types_p2.o p2_threads.o utils.o -I. -lpthread 
+	$(CC) -o ${EXEC} $^ -I. -lpthread 
 #----------------------------------------------
 
 
