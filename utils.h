@@ -9,7 +9,7 @@
 #include <vector>
 #include <unistd.h>
 
-#define MSEC(x) x*1000
+#define MSEC(x) (x)*1000
 
 
 long get_elasped_time(struct timeval& start, struct timeval& end);
