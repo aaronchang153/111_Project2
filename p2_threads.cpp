@@ -6,6 +6,7 @@ extern pthread_mutex_t mutex;
 extern std::queue<Person> man_queue;
 extern std::queue<Person> woman_queue;
 extern Fittingroom fitting_room;
+extern char all_people_sent;
 
 void *threadfunc(void *param)
 {
@@ -57,7 +58,7 @@ void *producer_thread(void *param){
 		// acquire lock
 		status = pthread_mutex_lock(&mutex);
 
-		if(p.get_gender == MALE)
+		if(p.get_gender() == MALE)
 			man_queue.push(p);
 		else
 			woman_queue.push(p);
@@ -68,22 +69,29 @@ void *producer_thread(void *param){
 		usleep(MSEC((rand() % 5) + 1)); // wait 1-5 ms before making another person
 	}
 
+	all_people_sent = 1;
+
 	return NULL;
 }
 
 void *removing_thread(void *param){
 	int status;
 
-	// acquire lock
-	status = pthread_mutex_lock(&mutex);
+	// loop as long as there's still people left
+	while(!(man_queue.empty() && woman_queue.empty() && (fitting_room.get_status() != EMPTY)) 
+		&& !all_people_sent){
 
-	// remove everyone that's ready to leave
-	// remove_ready returns non-zero if anyone was removed
-	if(fitting_room.remove_ready())
-		pthread_cond_signal(&cond);
+		// acquire lock
+		status = pthread_mutex_lock(&mutex);
 
-	// release lock
-	status = pthread_mutex_unlock(&mutex);
+		// remove everyone that's ready to leave
+		// remove_ready returns non-zero if anyone was removed
+		if(fitting_room.remove_ready())
+			pthread_cond_signal(&cond);
+
+		// release lock
+		status = pthread_mutex_unlock(&mutex);
+	}
 
 	return NULL;
 }
@@ -91,42 +99,51 @@ void *removing_thread(void *param){
 void *sending_thread(void *param){
 	int status;
 
-	// acquire lock
-	status = pthread_mutex_lock(&mutex);
+	// loop as long as there's still people left
+	while(!(man_queue.empty() && woman_queue.empty() && (fitting_room.get_status() != EMPTY)) 
+		&& !all_people_sent){
 
-	// if all rooms are full wait until removing_thread removes someone
-	if(fitting_room.get_status() == FULL)
-		pthread_cond_wait(&cond, &mutex);
+		// acquire lock
+		status = pthread_mutex_lock(&mutex);
 
-	// add person to the queue if necessary/possible
-	if(fitting_room.get_status() == MANPRESENT){
-		if(!man_queue.empty()){
-			fitting_room.add_person(man_queue.front());
-			man_queue.pop();
-		}
-	}
-	else if(fitting_room.get_status() == WOMANPRESENT){
-		if(!woman_queue.empty()){
-			fitting_room.add_person(woman_queue.front());
-			woman_queue.pop();
-		}
-	}
-	else if(fitting_room.get_status() == EMPTY){
-		// add a person from the queue with more people in it
-		if(!(man_queue.empty() && woman_queue.empty())){
-			if(man_queue.size() > woman_queue.size()){
-				fitting_room.add_person(man_queue.front());
+		// if all rooms are full wait until removing_thread removes someone
+		if(fitting_room.get_status() == FULL)
+			pthread_cond_wait(&cond, &mutex);
+
+		// add person to the queue if necessary/possible
+		if(fitting_room.get_status() == MANPRESENT){
+			if(!man_queue.empty()){
+				Person p = man_queue.front();
 				man_queue.pop();
-			}
-			else{
-				fitting_room.add_person(woman_queue.front());
-				woman_queue.pop();
+				fitting_room.add_person(p);
 			}
 		}
-	}
+		else if(fitting_room.get_status() == WOMANPRESENT){
+			if(!woman_queue.empty()){
+				Person p = woman_queue.front();
+				woman_queue.pop();
+				fitting_room.add_person(p);
+			}
+		}
+		else if(fitting_room.get_status() == EMPTY){
+			// add a person from the queue with more people in it
+			if(!(man_queue.empty() && woman_queue.empty())){
+				if(man_queue.size() > woman_queue.size()){
+					Person p = man_queue.front();
+					man_queue.pop();
+					fitting_room.add_person(p);
+				}
+				else{
+					Person p = woman_queue.front();
+					woman_queue.pop();
+					fitting_room.add_person(p);
+				}
+			}
+		}
 
-	// release lock
-	status = pthread_mutex_unlock(&mutex);
+		// release lock
+		status = pthread_mutex_unlock(&mutex);
+	}
 
 	return NULL;
 }
