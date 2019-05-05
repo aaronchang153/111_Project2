@@ -45,6 +45,7 @@ public:
 	unsigned long get_use_order(void);
 
 	void set_time(long data);
+	long get_time();
 	int ready_to_leave(void);
 
 	void start(void);
@@ -52,8 +53,6 @@ public:
 };
 
 
-// Class for the fittingroom
-// You may need to add more class member variables and functions
 class Fittingroom {
 
 private:
@@ -64,6 +63,8 @@ private:
 	Person *stalls; // the actual people and their information
 	char *occupied; // keeps track of whether or not each stall is occupied
 	int occupied_count; // number of stalls occupied
+	char gender_flag; // 0 for man present, 1 for woman
+	                  // used internally for some stuff
 	void add_to_array(Person &p);
 	void remove_from_array(int pos);
 
@@ -73,13 +74,13 @@ public:
 
 	void set_num_stalls(int n);
 
-	// You need to use this function to print the Fittingroom's status
-	void print_status(void);
 	int get_status(void);
+	std::string get_status_string(void);
 
+	int get_occupied_count(void);
+	int get_men_present(void);
+	int get_women_present(void);
 
-	// Call by reference
-	// This is just an example. You can implement any function you need
 	void add_person(Person &p);
 
 	// Remove everyone who's ready to leave
