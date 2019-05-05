@@ -43,14 +43,23 @@ void *producer_thread(void *param){
 	for(int i = 0; i < 2 * each_gender_cnt; i++){
 		Person p;
 		// if we've already made the max number of men
-		if(man_count == each_gender_cnt)
+		if(man_count == each_gender_cnt){
 			p.set_gender(FEMALE);
+			woman_count++;
+		}
 		// if we've already made the max number of women
-		else if(woman_count == each_gender_cnt)
+		else if(woman_count == each_gender_cnt){
 			p.set_gender(MALE);
+			man_count++;
+		}
 		// general case
-		else
+		else{
 			p.set_gender(rand() % 2); // MALE = 0, FEMALE = 1
+			if(p.get_gender() == MALE)
+				man_count++;
+			else
+				woman_count++;
+		}
 		
 		p.set_time((rand() % 8) + 3); // set stay time to 3-10 ms
 
