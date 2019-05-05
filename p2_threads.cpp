@@ -7,29 +7,8 @@ extern std::queue<Person> man_queue;
 extern std::queue<Person> woman_queue;
 extern Fittingroom fitting_room;
 extern char all_people_sent;
+extern struct timeval t_global_start;
 
-void *threadfunc(void *param)
-{
-
-	int status;
-	printf(" [Thread] Start\n");
-
-	printf(" [Thread] Locks\n");
-	status = pthread_mutex_lock(&mutex);
-
-    printf(" [Thread] Blocked\n");
-    status = pthread_cond_wait(&cond, &mutex);
-
-	printf(" [Thread] Starts again.\n");
-	for (int i=0; i<3; i++) {
-		printf(" [Thread] Complete thread after (%d) seconds\n", (3-i));
-		usleep(MSEC(1000));
-	}
-
-	printf(" [Thread] Unlocks\n");
-	status = pthread_mutex_unlock(&mutex);
-	printf(" [Thread] Complete\n");
-}
 
 void *producer_thread(void *param){
 	int status;
@@ -67,10 +46,14 @@ void *producer_thread(void *param){
 		// acquire lock
 		status = pthread_mutex_lock(&mutex);
 
-		if(p.get_gender() == MALE)
+		if(p.get_gender() == MALE){
+			man_wants_to_enter();
 			man_queue.push(p);
-		else
+		}
+		else{
+			woman_wants_to_enter();
 			woman_queue.push(p);
+		}
 
 		// release lock
 		status = pthread_mutex_unlock(&mutex);
@@ -87,8 +70,8 @@ void *removing_thread(void *param){
 	int status;
 
 	// loop as long as there's still people left
-	while(!(man_queue.empty() && woman_queue.empty() && (fitting_room.get_status() != EMPTY)) 
-		&& !all_people_sent){
+	while(!man_queue.empty() || !woman_queue.empty() || (fitting_room.get_status() != EMPTY)
+		|| !all_people_sent){
 
 		// acquire lock
 		status = pthread_mutex_lock(&mutex);
@@ -109,8 +92,8 @@ void *sending_thread(void *param){
 	int status;
 
 	// loop as long as there's still people left
-	while(!(man_queue.empty() && woman_queue.empty() && (fitting_room.get_status() != EMPTY)) 
-		&& !all_people_sent){
+	while(!man_queue.empty() || !woman_queue.empty() || (fitting_room.get_status() != EMPTY)
+		|| !all_people_sent){
 
 		// acquire lock
 		status = pthread_mutex_lock(&mutex);
@@ -155,4 +138,92 @@ void *sending_thread(void *param){
 	}
 
 	return NULL;
+}
+
+/***** the helper functions that print stuff *****/
+
+void man_wants_to_enter(){
+	struct timeval t_curr;
+	gettimeofday(&t_curr, NULL);
+
+	printf("[%ld ms] [Input] A person (Man) goes into the queue.\n", 
+		get_elasped_time(t_global_start, t_curr));
+}
+
+void woman_wants_to_enter(){
+	struct timeval t_curr;
+	gettimeofday(&t_curr, NULL);
+
+	printf("[%ld ms] [Input] A person (Woman) goes into the queue.\n", 
+		get_elasped_time(t_global_start, t_curr));
+}
+
+void man_enters(Person &p){
+	struct timeval t_curr;
+	gettimeofday(&t_curr, NULL);
+
+	int m_size = man_queue.size();
+	int w_size = woman_queue.size();
+
+	printf("[%ld ms] [Queue] Send (Man) into the fitting room (Stay %ld ms), Status: Total: %d (Men: %d, Women: %d)\n",
+		get_elasped_time(t_global_start, t_curr),
+		p.get_time(),
+		m_size + w_size,
+		m_size,
+		w_size);
+	
+	printf("[%ld ms] [Fitting Room] (Man) goes into the fitting room (Stay %ld ms), State is (%s): Total: %d (Men: %d, Women: %d)\n",
+		get_elasped_time(t_global_start, t_curr),
+		p.get_time(),
+		fitting_room.get_status_string().c_str(),
+		fitting_room.get_occupied_count(),
+		fitting_room.get_men_present(),
+		fitting_room.get_women_present());
+}
+
+void woman_enters(Person &p){
+	struct timeval t_curr;
+	gettimeofday(&t_curr, NULL);
+
+	int m_size = man_queue.size();
+	int w_size = woman_queue.size();
+
+	printf("[%ld ms] [Queue] Send (Woman) into the fitting room (Stay %ld ms), Status: Total: %d (Men: %d, Women: %d)\n",
+		get_elasped_time(t_global_start, t_curr),
+		p.get_time(),
+		m_size + w_size,
+		m_size,
+		w_size);
+	
+	printf("[%ld ms] [Fitting Room] (Woman) goes into the fitting room (Stay %ld ms), State is (%s): Total: %d (Men: %d, Women: %d)\n",
+		get_elasped_time(t_global_start, t_curr),
+		p.get_time(),
+		fitting_room.get_status_string().c_str(),
+		fitting_room.get_occupied_count(),
+		fitting_room.get_men_present(),
+		fitting_room.get_women_present());
+}
+
+void man_leaves(Person &p){
+	struct timeval t_curr;
+	gettimeofday(&t_curr, NULL);
+
+	printf("[%ld ms] [Fitting Room] (Man) leaves the fitting room. State is (%s): Total: %d (Men: %d, Women: %d)\n",
+		get_elasped_time(t_global_start, t_curr),
+		fitting_room.get_status_string().c_str(),
+		fitting_room.get_occupied_count(),
+		fitting_room.get_men_present(),
+		fitting_room.get_women_present());
+}
+
+void woman_leaves(Person &p){
+	struct timeval t_curr;
+	gettimeofday(&t_curr, NULL);
+
+	printf("[%ld ms] [Fitting Room] (Woman) leaves the fitting room. State is (%s): Total: %d (Men: %d, Women: %d)\n",
+		get_elasped_time(t_global_start, t_curr),
+		fitting_room.get_status_string().c_str(),
+		fitting_room.get_occupied_count(),
+		fitting_room.get_men_present(),
+		fitting_room.get_women_present());
 }
