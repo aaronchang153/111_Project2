@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include "types_p2.h"
 
-void *threadfunc(void *param);
 
 // Thread for...
 //  ...producing people to send to fitting rooms
@@ -23,5 +22,22 @@ void *removing_thread(void *param);
 //  ...sending people to the fitting room if there's space
 void *sending_thread(void *param);
 
+
+/**
+ * Helper Functions for Printing Stuff
+ * Should be called only if the calling function has the lock
+ */
+
+// Used by producer thread
+void man_wants_to_enter();
+void woman_wants_to_enter();
+
+// Used by sending thread
+void man_enters(Person &p);
+void woman_enters(Person &p);
+
+// Used by removing thread
+void man_leaves(Person &p);
+void woman_leaves(Person &p);
 
 #endif
