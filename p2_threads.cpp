@@ -135,6 +135,8 @@ void *sending_thread(void *param){
 
 		// release lock
 		status = pthread_mutex_unlock(&mutex);
+
+		usleep(MSEC((rand() % 5) + 1)); // wait 1-5 ms before sending another person
 	}
 
 	return NULL;
