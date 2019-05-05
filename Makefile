@@ -1,6 +1,6 @@
 EXEC=p2_exec
 CC=g++
-CFLAGS= -std=c++98 -g -I.
+CFLAGS= -std=c++98 -I.
 
 #----------------------------------------------
 # complete this part
