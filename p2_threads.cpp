@@ -24,20 +24,20 @@ void *producer_thread(void *param){
 		// if we've already made the max number of men
 		if(man_count == each_gender_cnt){
 			p.set_gender(FEMALE);
-			woman_count++;
+			p.set_order((woman_count++) + 1); // +1 cause person 0 is actually the 1st person and so on
 		}
 		// if we've already made the max number of women
 		else if(woman_count == each_gender_cnt){
 			p.set_gender(MALE);
-			man_count++;
+			p.set_order((man_count++) + 1);
 		}
 		// general case
 		else{
 			p.set_gender(rand() % 2); // MALE = 0, FEMALE = 1
 			if(p.get_gender() == MALE)
-				man_count++;
+				p.set_order((man_count++) + 1);
 			else
-				woman_count++;
+				p.set_order((woman_count++) + 1);
 		}
 		
 		p.set_time((rand() % 8) + 3); // set stay time to 3-10 ms
@@ -47,12 +47,12 @@ void *producer_thread(void *param){
 		status = pthread_mutex_lock(&mutex);
 
 		if(p.get_gender() == MALE){
-			man_wants_to_enter();
 			man_queue.push(p);
+			man_wants_to_enter(p);
 		}
 		else{
-			woman_wants_to_enter();
 			woman_queue.push(p);
+			woman_wants_to_enter(p);
 		}
 
 		// release lock
@@ -144,20 +144,34 @@ void *sending_thread(void *param){
 
 /***** the helper functions that print stuff *****/
 
-void man_wants_to_enter(){
+void man_wants_to_enter(Person &p){
 	struct timeval t_curr;
 	gettimeofday(&t_curr, NULL);
 
-	printf("[%ld ms] [Input] A person (Man) goes into the queue.\n", 
-		get_elasped_time(t_global_start, t_curr));
+	int m_size = man_queue.size();
+	int w_size = woman_queue.size();
+
+	printf("[%ld ms] [Input] %s (Man) goes into the queue. Queue Status: Total %d (Men: %d, Women: %d)\n",
+		get_elasped_time(t_global_start, t_curr),
+		num_to_string(p.get_order()).c_str(),
+		m_size + w_size,
+		m_size,
+		w_size);
 }
 
-void woman_wants_to_enter(){
+void woman_wants_to_enter(Person &p){
 	struct timeval t_curr;
 	gettimeofday(&t_curr, NULL);
 
-	printf("[%ld ms] [Input] A person (Woman) goes into the queue.\n", 
-		get_elasped_time(t_global_start, t_curr));
+	int m_size = man_queue.size();
+	int w_size = woman_queue.size();
+
+	printf("[%ld ms] [Input] %s (Woman) goes into the queue. Queue Status: Total %d (Men: %d, Women: %d)\n",
+		get_elasped_time(t_global_start, t_curr),
+		num_to_string(p.get_order()).c_str(),
+		m_size + w_size,
+		m_size,
+		w_size);
 }
 
 void man_enters(Person &p){
@@ -167,15 +181,17 @@ void man_enters(Person &p){
 	int m_size = man_queue.size();
 	int w_size = woman_queue.size();
 
-	printf("[%ld ms] [Queue] Send (Man) into the fitting room (Stay %ld ms), Status: Total: %d (Men: %d, Women: %d)\n",
+	printf("[%ld ms] [Queue] Send %s (Man) into the fitting room (Stay %ld ms), Queue Status: Total: %d (Men: %d, Women: %d)\n",
 		get_elasped_time(t_global_start, t_curr),
+		num_to_string(p.get_order()).c_str(),
 		p.get_time(),
 		m_size + w_size,
 		m_size,
 		w_size);
 	
-	printf("[%ld ms] [Fitting Room] (Man) goes into the fitting room (Stay %ld ms), State is (%s): Total: %d (Men: %d, Women: %d)\n",
+	printf("[%ld ms] [Fitting Room] %s (Man) goes into the fitting room (Stay %ld ms), Fitting Room State is (%s): Total: %d (Men: %d, Women: %d)\n",
 		get_elasped_time(t_global_start, t_curr),
+		num_to_string(p.get_order()).c_str(),
 		p.get_time(),
 		fitting_room.get_status_string().c_str(),
 		fitting_room.get_occupied_count(),
@@ -190,15 +206,17 @@ void woman_enters(Person &p){
 	int m_size = man_queue.size();
 	int w_size = woman_queue.size();
 
-	printf("[%ld ms] [Queue] Send (Woman) into the fitting room (Stay %ld ms), Status: Total: %d (Men: %d, Women: %d)\n",
+	printf("[%ld ms] [Queue] Send %s (Woman) into the fitting room (Stay %ld ms), Queue Status: Total: %d (Men: %d, Women: %d)\n",
 		get_elasped_time(t_global_start, t_curr),
+		num_to_string(p.get_order()).c_str(),
 		p.get_time(),
 		m_size + w_size,
 		m_size,
 		w_size);
 	
-	printf("[%ld ms] [Fitting Room] (Woman) goes into the fitting room (Stay %ld ms), State is (%s): Total: %d (Men: %d, Women: %d)\n",
+	printf("[%ld ms] [Fitting Room] %s (Woman) goes into the fitting room (Stay %ld ms), Fitting Room State is (%s): Total: %d (Men: %d, Women: %d)\n",
 		get_elasped_time(t_global_start, t_curr),
+		num_to_string(p.get_order()).c_str(),
 		p.get_time(),
 		fitting_room.get_status_string().c_str(),
 		fitting_room.get_occupied_count(),
@@ -210,8 +228,9 @@ void man_leaves(Person &p){
 	struct timeval t_curr;
 	gettimeofday(&t_curr, NULL);
 
-	printf("[%ld ms] [Fitting Room] (Man) leaves the fitting room. State is (%s): Total: %d (Men: %d, Women: %d)\n",
+	printf("[%ld ms] [Fitting Room] %s (Man) leaves the fitting room. Fitting Room State is (%s): Total: %d (Men: %d, Women: %d)\n",
 		get_elasped_time(t_global_start, t_curr),
+		num_to_string(p.get_order()).c_str(),
 		fitting_room.get_status_string().c_str(),
 		fitting_room.get_occupied_count(),
 		fitting_room.get_men_present(),
@@ -222,8 +241,9 @@ void woman_leaves(Person &p){
 	struct timeval t_curr;
 	gettimeofday(&t_curr, NULL);
 
-	printf("[%ld ms] [Fitting Room] (Woman) leaves the fitting room. State is (%s): Total: %d (Men: %d, Women: %d)\n",
+	printf("[%ld ms] [Fitting Room] %s (Woman) leaves the fitting room. Fitting Room State is (%s): Total: %d (Men: %d, Women: %d)\n",
 		get_elasped_time(t_global_start, t_curr),
+		num_to_string(p.get_order()).c_str(),
 		fitting_room.get_status_string().c_str(),
 		fitting_room.get_occupied_count(),
 		fitting_room.get_men_present(),
