@@ -29,8 +29,8 @@ void *sending_thread(void *param);
  */
 
 // Used by producer thread
-void man_wants_to_enter();
-void woman_wants_to_enter();
+void man_wants_to_enter(Person &p);
+void woman_wants_to_enter(Person &p);
 
 // Used by sending thread
 void man_enters(Person &p);
