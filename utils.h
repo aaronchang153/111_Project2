@@ -14,7 +14,8 @@
 
 long get_elasped_time(struct timeval& start, struct timeval& end);
 
-
+// convert a number to a string (e.g. 1 -> "1st", 2 -> "2nd", etc.)
+std::string num_to_string(int n);
 
 
 #endif
